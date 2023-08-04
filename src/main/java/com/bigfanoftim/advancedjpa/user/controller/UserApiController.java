@@ -1,14 +1,14 @@
 package com.bigfanoftim.advancedjpa.user.controller;
 
-import com.bigfanoftim.advancedjpa.user.controller.dto.CreateUserRequest;
-import com.bigfanoftim.advancedjpa.user.controller.dto.CreateUserResponse;
-import com.bigfanoftim.advancedjpa.user.controller.dto.UpdateUserRequest;
-import com.bigfanoftim.advancedjpa.user.controller.dto.UpdateUserResponse;
+import com.bigfanoftim.advancedjpa.user.controller.dto.*;
 import com.bigfanoftim.advancedjpa.user.domain.User;
 import com.bigfanoftim.advancedjpa.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @RestController
@@ -45,6 +45,20 @@ public class UserApiController {
         return UpdateUserResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
+                .build();
+    }
+
+    @GetMapping("/api/v1/users")
+    public Result getUsers() {
+        List<UserDto> collect = userService.findAll().stream()
+                .map(user -> UserDto.builder()
+                        .name(user.getName())
+                        .build())
+                .collect(Collectors.toList());
+
+        return Result.builder()
+                .count(collect.size())
+                .data(collect)
                 .build();
     }
 }

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -33,5 +34,10 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("없는 user입니다. id=" + id));
         user.updateName(name);
+    }
+
+    @Transactional(readOnly = true)
+    public List<User> findAll() {
+        return userRepository.findAll();
     }
 }
