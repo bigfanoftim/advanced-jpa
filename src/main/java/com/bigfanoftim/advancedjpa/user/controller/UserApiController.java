@@ -1,9 +1,10 @@
 package com.bigfanoftim.advancedjpa.user.controller;
 
+import com.bigfanoftim.advancedjpa.common.dto.Result;
 import com.bigfanoftim.advancedjpa.user.controller.dto.*;
 import com.bigfanoftim.advancedjpa.user.domain.User;
 import com.bigfanoftim.advancedjpa.user.service.UserService;
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

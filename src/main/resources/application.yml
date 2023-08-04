@@ -8,11 +8,12 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
-    open-in-view: false
+        default_batch_fetch_size: 100
+    open-in-view: true
 
 logging:
   level:

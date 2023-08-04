@@ -1,7 +1,7 @@
 package com.bigfanoftim.advancedjpa.user.controller.dto;
 
 import com.bigfanoftim.advancedjpa.user.domain.User;
-import jakarta.validation.constraints.NotNull;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;

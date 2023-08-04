@@ -1,4 +1,4 @@
-package com.bigfanoftim.advancedjpa.user.controller.dto;
+package com.bigfanoftim.advancedjpa.common.dto;
 
 import lombok.Builder;
 import lombok.Getter;

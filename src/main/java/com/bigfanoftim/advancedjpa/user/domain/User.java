@@ -1,6 +1,6 @@
 package com.bigfanoftim.advancedjpa.user.domain;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
