@@ -2,6 +2,8 @@ package com.bigfanoftim.advancedjpa.order.controller;
 
 import com.bigfanoftim.advancedjpa.common.dto.Result;
 import com.bigfanoftim.advancedjpa.order.domain.OrderRepository;
+import com.bigfanoftim.advancedjpa.order.domain.query.OrderQueryDto;
+import com.bigfanoftim.advancedjpa.order.domain.query.OrderQueryRepository;
 import com.bigfanoftim.advancedjpa.order.dto.OrderDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 public class OrderApiController {
 
     private final OrderRepository orderRepository;
+    private final OrderQueryRepository orderQueryRepository;
 
     @GetMapping("/api/v1/orders")
     public Result ordersWithItemsV1() {
@@ -46,5 +49,13 @@ public class OrderApiController {
                 .count(collect.size())
                 .data(collect)
                 .build();
+    }
+
+    @GetMapping("/api/v3/orders")
+    public List<OrderQueryDto> ordersWithItemsV3(
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
+            @RequestParam(value = "limit", defaultValue = "100") int limit
+    ) {
+        return orderQueryRepository.findOrderQueryDtos();
     }
 }
