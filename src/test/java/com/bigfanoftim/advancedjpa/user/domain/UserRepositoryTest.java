@@ -1,12 +1,15 @@
 package com.bigfanoftim.advancedjpa.user.domain;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Rollback;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -65,6 +68,24 @@ class UserRepositoryTest {
     }
 
     @Test
+    public void findByNames() throws Exception {
+        User userA = User.builder()
+                .name("userA")
+                .age(10)
+                .build();
+        User userB = User.builder()
+                .name("userB")
+                .age(20)
+                .build();
+        userRepository.save(userA);
+        userRepository.save(userB);
+
+        List<User> users = userRepository.findByNames(Arrays.asList("userA", "userB"));
+
+        assertThat(users.size()).isEqualTo(2);
+    }
+
+    @Test
     public void findByAgeGreaterThan() throws Exception {
         User userA = User.builder()
                 .name("userA")
@@ -80,6 +101,9 @@ class UserRepositoryTest {
         List<User> allUsers = userRepository.findByAgeGreaterThan(10);
 
         assertThat(allUsers.size()).isEqualTo(1);
+        assertThat(allUsers.get(0).getId()).isEqualTo(userB.getId());
+        assertThat(allUsers.get(0).getName()).isEqualTo(userB.getName());
+        assertThat(allUsers.get(0).getAge()).isEqualTo(userB.getAge());
     }
 
     @Test
@@ -98,5 +122,113 @@ class UserRepositoryTest {
         List<User> allUsers = userRepository.findByAgeGreaterThanEqual(10);
 
         assertThat(allUsers.size()).isEqualTo(2);
+    }
+
+    @Test
+    public void findMemberByName() throws Exception {
+        User userA = User.builder()
+                .name("userA")
+                .age(10)
+                .build();
+        User userB = User.builder()
+                .name("userB")
+                .age(20)
+                .build();
+        userRepository.save(userA);
+        userRepository.save(userB);
+
+        User userA1 = userRepository.findMemberByName("userA");
+
+        assertThat(userA1.getId()).isEqualTo(userA.getId());
+        assertThat(userA1.getName()).isEqualTo(userA.getName());
+        assertThat(userA1.getAge()).isEqualTo(userA.getAge());
+        assertThat(userA1).isEqualTo(userA);
+    }
+
+    /**
+     * 순수 JPA에선 NoResultException 처리
+     * 하지만 Spring Data JPA는 null로 반환
+     * 따라서 없을 수도 있음을 의미하는 Optional로 반환하는 것이 좋을 수 있음
+     *
+     * 만약 객체 하나만 반환해야 하는데 2개 이상이 반환되면 repository에 맞는 예외 발생 (JPA, Mongo..)
+     * Spring은 해당 예외를 Spring에 맞는 예외로 변경한다. (IncorrectResultSizeDataAccessException)
+     * 따라서 어떤 Data Repository를 사용하더라도 클라이언트는 같은 예외로 처리할 수 있다.
+     */
+    @Test
+    public void findMemberByName_결과_없으면_null() throws Exception {
+        User userA = User.builder()
+                .name("userA")
+                .age(10)
+                .build();
+        User userB = User.builder()
+                .name("userB")
+                .age(20)
+                .build();
+        userRepository.save(userA);
+        userRepository.save(userB);
+
+        User userA1 = userRepository.findMemberByName("unknown");
+        assertThat(userA1).isNull();
+    }
+
+    @Test
+    public void page_findByAge() throws Exception {
+        //given
+        userRepository.save(new User("A1", 20));
+        userRepository.save(new User("A2", 20));
+        userRepository.save(new User("A3", 20));
+        userRepository.save(new User("A4", 20));
+        userRepository.save(new User("A5", 20));
+        userRepository.save(new User("A6", 20));
+        userRepository.save(new User("A7", 20));
+        userRepository.save(new User("A8", 20));
+        userRepository.save(new User("A9", 20));
+
+        int age = 20;
+        int size = 4;
+        PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "name"));
+
+        long count = userRepository.count();
+        long totalPages = count / size + ((count % size > 0 ? 1 : 0));
+
+        //when
+        Page<User> page = userRepository.findByAge(age, pageRequest);
+        List<User> content = page.getContent();
+
+        //then
+        assertThat(content.size()).isEqualTo(4);
+        assertThat(page.getTotalElements()).isEqualTo(count);
+        assertThat(page.getNumber()).isEqualTo(0);
+        assertThat(page.getTotalPages()).isEqualTo(totalPages);
+        assertThat(page.isFirst()).isTrue();
+        assertThat(page.hasNext()).isTrue();
+    }
+
+    @Test
+    public void page_findSliceByAge() throws Exception {
+        //given
+        userRepository.save(new User("A1", 20));
+        userRepository.save(new User("A2", 20));
+        userRepository.save(new User("A3", 20));
+        userRepository.save(new User("A4", 20));
+        userRepository.save(new User("A5", 20));
+        userRepository.save(new User("A6", 20));
+        userRepository.save(new User("A7", 20));
+        userRepository.save(new User("A8", 20));
+        userRepository.save(new User("A9", 20));
+
+        int age = 20;
+        int size = 4;
+        PageRequest pageRequest = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "name"));
+
+        //when
+        Slice<User> page = userRepository.findByAge(age, pageRequest);
+        List<User> content = page.getContent();
+
+        //then
+        assertThat(content.size()).isEqualTo(4);
+        assertThat(page.getNumber()).isEqualTo(0);
+        assertThat(page.isFirst()).isTrue();
+        assertThat(page.hasNext()).isTrue();
     }
 }

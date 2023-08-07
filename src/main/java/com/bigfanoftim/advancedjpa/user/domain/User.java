@@ -6,7 +6,7 @@ import com.bigfanoftim.advancedjpa.team.domain.Team;
 import lombok.*;
 
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @ToString(of = {"id", "name"})
 @Entity
 @Table(name = "users")
