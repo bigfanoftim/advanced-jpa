@@ -1,5 +1,7 @@
 package com.bigfanoftim.advancedjpa.user.domain;
 
+import com.bigfanoftim.advancedjpa.team.domain.Team;
+import com.bigfanoftim.advancedjpa.team.domain.TeamRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -9,6 +11,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.List;
 
@@ -18,7 +21,10 @@ import static org.assertj.core.api.Assertions.*;
 @Transactional
 class UserRepositoryTest {
 
+    @Autowired EntityManager em;
+
     @Autowired UserRepository userRepository;
+    @Autowired TeamRepository teamRepository;
 
     @Test
     public void simpleTest() throws Exception {
@@ -230,5 +236,69 @@ class UserRepositoryTest {
         assertThat(page.getNumber()).isEqualTo(0);
         assertThat(page.isFirst()).isTrue();
         assertThat(page.hasNext()).isTrue();
+    }
+
+    @Test
+    public void findListByAge() throws Exception {
+        //given
+        userRepository.save(new User("A1", 10));
+        userRepository.save(new User("A2", 15));
+        userRepository.save(new User("A3", 20));
+        userRepository.save(new User("A4", 26));
+        userRepository.save(new User("A5", 39));
+
+        //when
+        int resultCount = userRepository.bulkAgePlus(20);
+
+        //then
+        assertThat(resultCount).isEqualTo(3);
+
+        User user = userRepository.findByName("A3").get(0);
+        assertThat(user.getAge()).isEqualTo(21);
+    }
+
+    @Test
+    public void findUserWithTeamByName() throws Exception {
+        //given
+        Team team = new Team("team");
+        teamRepository.save(team);
+
+        userRepository.save(new User("A1", 10 ,team));
+        userRepository.save(new User("A2", 15, team));
+
+        em.flush();
+        em.clear();
+
+        //when
+        List<User> users = userRepository.findUserWithTeamByName("A1");
+
+        for (User user : users) {
+            System.out.println("user.getName = " + user.getName());
+            System.out.println("user.teamClass = " + user.getTeam().getClass());
+        }
+
+        //then
+    }
+
+    @Test
+    public void findUserByJoin() throws Exception {
+        //given
+        Team team = new Team("team");
+        teamRepository.save(team);
+
+        userRepository.save(new User("A1", 10 ,team));
+        userRepository.save(new User("A2", 15, team));
+
+        em.flush();
+        em.clear();
+
+        //when
+        List<User> users = userRepository.findUserByJoin();
+
+        for (User user : users) {
+            System.out.println("user.getTeam().getName() = " + user.getTeam().getName());
+        }
+
+        //then
     }
 }

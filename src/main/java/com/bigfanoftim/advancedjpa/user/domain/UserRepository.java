@@ -3,7 +3,9 @@ package com.bigfanoftim.advancedjpa.user.domain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -71,4 +73,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * 엔티티로 반환할 수도 있다.
      */
     List<User> findListByAge(int age, Pageable pageable);
+
+    @Modifying(clearAutomatically = true)
+    @Query("update User u set u.age = u.age + 1 where u.age >= :age")
+    int bulkAgePlus(@Param("age") int age);
+
+    /**
+     * EntityGraph를 Named로 활용할 수 있다.
+     */
+//    @EntityGraph(attributePaths = {"team"})
+    @EntityGraph("User.all")
+    List<User> findUserWithTeamByName(@Param("name") String name);
+
+    @Query("select u from User u left join u.team t")
+    List<User> findUserByJoin();
 }

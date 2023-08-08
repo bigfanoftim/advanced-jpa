@@ -2,6 +2,8 @@ package com.bigfanoftim.advancedjpa.user.domain;
 
 import javax.persistence.*;
 
+import com.bigfanoftim.advancedjpa.common.base.BaseEntity;
+import com.bigfanoftim.advancedjpa.common.base.BaseTimeEntity;
 import com.bigfanoftim.advancedjpa.team.domain.Team;
 import lombok.*;
 
@@ -14,7 +16,8 @@ import lombok.*;
         name="User.findByName",
         query="select u from User u where u.name = :name"
 )
-public class User {
+@NamedEntityGraph(name = "User.all", attributeNodes = @NamedAttributeNode("team"))
+public class User extends BaseTimeEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,6 +30,12 @@ public class User {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id")
     private Team team;
+
+    public User(String name, int age, Team team) {
+        this.name = name;
+        this.age = age;
+        this.team = team;
+    }
 
     @Builder
     public User(String name, int age) {
