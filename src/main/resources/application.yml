@@ -19,6 +19,12 @@ spring:
         format_sql: true
         default_batch_fetch_size: 100
     open-in-view: true
+  data:
+    web:
+      pageable:
+        default-page-size: 10
+        max-page-size: 1000
+#        one-indexed-parameters: true
 
 logging:
   level:

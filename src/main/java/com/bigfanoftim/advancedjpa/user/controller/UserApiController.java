@@ -3,9 +3,15 @@ package com.bigfanoftim.advancedjpa.user.controller;
 import com.bigfanoftim.advancedjpa.common.dto.Result;
 import com.bigfanoftim.advancedjpa.user.controller.dto.*;
 import com.bigfanoftim.advancedjpa.user.domain.User;
+import com.bigfanoftim.advancedjpa.user.domain.UserRepository;
 import com.bigfanoftim.advancedjpa.user.service.UserService;
+
+import javax.annotation.PostConstruct;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +22,7 @@ import java.util.stream.Collectors;
 public class UserApiController {
 
     private final UserService userService;
+    private final UserRepository userRepository;
 
     @PostMapping("/api/v1/users")
     public CreateUserResponse saveUserV1(@RequestBody @Valid CreateUserRequest createUserRequest) {
@@ -61,5 +68,24 @@ public class UserApiController {
                 .count(collect.size())
                 .data(collect)
                 .build();
+    }
+
+    /**
+     * http://localhost:8080/api/v2/users?page=0&size=5&sort=id,desc
+     *
+     * application.yml에 default-page-size 추가 가능
+     */
+    @GetMapping("/api/v2/users")
+    public Page<UserDto> getPageUsers(@PageableDefault(size = 5, sort = "id") Pageable pageable) {
+        return userRepository.findAll(pageable)
+                .map(UserDto::new);
+    }
+
+//    @PostConstruct
+    public void init() {
+        for (int i = 1; i <= 100; i++) {
+            User user = new User("user" + i, i);
+            userRepository.save(user);
+        }
     }
 }
