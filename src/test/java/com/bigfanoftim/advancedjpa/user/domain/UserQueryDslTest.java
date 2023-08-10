@@ -4,10 +4,13 @@ import com.bigfanoftim.advancedjpa.team.domain.Team;
 import com.bigfanoftim.advancedjpa.user.controller.dto.QUserDto;
 import com.bigfanoftim.advancedjpa.user.controller.dto.UserDto;
 import com.bigfanoftim.advancedjpa.user.controller.dto.UserQueryDslDto;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -501,5 +504,92 @@ class UserQueryDslTest {
         for (UserDto userDto : fetch) {
             System.out.println("userDto = " + userDto);
         }
+    }
+
+    @Test
+    public void dynamicQueryBooleanBuilder() throws Exception {
+        String name = "A";
+        Integer age = 20;
+
+        List<User> result = searchMember1(name, age);
+
+        assertThat(result.size()).isEqualTo(1);
+    }
+
+    private List<User> searchMember1(String nameCond, Integer ageCond) {
+        /**
+         * Builder 생성자로 초기값을 넘겨도 된다.
+         * @example BooleanBuilder builder = new BooleanBuilder(user.name.eq(userCond));
+         */
+        BooleanBuilder builder = new BooleanBuilder();
+
+        if (nameCond != null) {
+            builder.and(user.name.eq(nameCond));
+        }
+
+        if (ageCond != null) {
+            builder.and(user.age.eq(ageCond));
+        }
+
+        return query
+                .select(user)
+                .from(user)
+                .where(builder)
+                .fetch();
+    }
+
+    @Test
+    public void dynamicQueryWhereParam() throws Exception {
+        String name = "A";
+        Integer age = 20;
+
+        List<User> result = searchMember2(name, age);
+
+        assertThat(result.size()).isEqualTo(1);
+    }
+
+    private List<User> searchMember2(String nameCond, Integer ageCond) {
+        /**
+         * where 절에 조건을 나열하면 and 조건으로 실행되는데, 이때 위에서 언급했던 것처럼
+         * null이 들어가면 그 값은 무시한다. 따라서 param이 null이면 null 값을 리턴함으로써
+         * 동적 필터링이 가능해진다.
+         */
+        return query
+                .selectFrom(user)
+                .where(nameEq(nameCond), ageEq(ageCond))
+             // .where(nameAndAgeEq(nameCond, ageCond))
+                .fetch();
+    }
+
+    /**
+     * 삼항연산자 대신 early return이 가독성이 더 좋은 것 같다.
+     */
+    private BooleanExpression nameEq(String nameCond) {
+        if (nameCond == null) {
+            return null;
+        }
+
+        return user.name.eq(nameCond);
+    }
+
+    private BooleanExpression ageEq(Integer ageCond) {
+        if (ageCond == null) {
+            return null;
+        }
+
+        return user.age.eq(ageCond);
+    }
+
+    /**
+     * 이런 형태로 조합이 가능해진다.
+     *
+     * 영한님 경험
+     *   -> 광고 상태: isValid, 날짜 IN
+     *   -> isServiceable로 composition
+     *   -> 좀 더 명확한 네이밍으로 이곳저곳에서 재활용이 가능하다.
+     *   -> 쿼리의 가독성이 높아진다.
+     */
+    private BooleanExpression nameAndAgeEq(String nameCond, Integer ageCond) {
+        return nameEq(nameCond).and(ageEq(ageCond));
     }
 }
